@@ -35,6 +35,41 @@ Access Public
          return res.status(500).json({error : error.message});
      }
 
- })
+ });
+
+ 
+/*
+Route  /signin
+Descrip  Signin with email and password
+params  None
+Access Public
+ Method Post
+ */
+
+ Router.post("/signin",async(req,res)=>{
+    try{
+        
+        const user = await UserModel.findByEmailAndPassword(
+            req.body.credentials
+        );
+        
+        await UserModel.findEmailAndPhone(req.body.credentials);
+
+        //db
+        //  const newUser = await UserModel.create(
+        //      req.body.credentials);
+
+         //JWT auth token
+         const token = user.generateJwtToken();
+
+         return res.status(200).json({token,  status: "Success"});
+
+
+
+    } catch(error){
+        return res.status(500).json({error : error.message});
+    }
+
+});
 
  export default Router;
