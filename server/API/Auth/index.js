@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 const Router = express.Router();
 
 //Models
- import UserModel from "../../database/user/index"
+ import { UserModel } from "../../database/user";
 
 /*
 Route  /signup
@@ -16,35 +16,23 @@ Access Public
 
  Router.post("/signup",async(req,res)=>{
      try{
-         const {email,password,fullname,phoneNumber} = req.body.credentials;
          
-         //check whether email or phone number exists
-         const checkUserByEmail =  await UserModel.findOne({email});
-         const checkUserByPhone = await UserModel.findOne({phoneNumber});
+         
+         await UserModel.findEmailAndPhone(req.body.credentials);
 
-         if(checkUserByPhone || checkUserByEmail){
-             return res.json({error:"User already Exists"});
-         }
-
-         // hashing
-          const bcryptSalt = await bcrypt.genSalt(8);
-
-          const hashedPassword = await bcrypt.hash(password , bcryptSalt);
-
-          await UserModel.create({
-              ...req.body.credentials,
-              password: hashedPassword
-          });
+         //db
+          const newUser = await UserModel.create(
+              req.body.credentials);
 
           //JWT auth token
-          const token = jwt.sign({user: {fullname,email}},"ZomatoApp");
+          const token = newUser.generateJwtToken();
 
-          return res.status(200).json({token});
+          return res.status(200).json({token,  status: "Success"});
 
 
 
      } catch(error){
-         return res.status(500).json({error : error.meggage});
+         return res.status(500).json({error : error.message});
      }
 
  })
